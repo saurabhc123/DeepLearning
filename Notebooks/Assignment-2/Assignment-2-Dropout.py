@@ -13,11 +13,11 @@ from sklearn.metrics import f1_score
 
 def initialize_network(n_inputs, n_neurons , n_outputs, dropout_prob):
 	network = list()
-	hidden_layer1 = [{'weights' :generate_layer(n_inputs),'dropped': decision(dropout_prob)} for i in range(n_neurons)]
+	hidden_layer1 = [{'weights' :generate_layer(n_inputs),'dropped': decision(0)} for i in range(n_neurons)]
 	network.append(hidden_layer1)
 	hidden_layer2 = [{'weights' :generate_layer(n_neurons),'dropped': decision(dropout_prob)} for i in range(n_neurons)]
 	network.append(hidden_layer2)
-	output_layer = [{'weights' :generate_layer(n_neurons),'dropped': decision(dropout_prob)} for i in range(n_outputs)]
+	output_layer = [{'weights' :generate_layer(n_neurons),'dropped': decision(0)} for i in range(n_outputs)]
 	network.append(output_layer)
 	return network
 
@@ -154,7 +154,23 @@ def softmax(z):
     return np.divide(np.exp(z),sum)
 
 def get_weighted_network(networks, dropout_prob):
-    
+    network = list()
+    hidden_layer1 = [{'weights' :generate_weighted_weights(networks,0,dropout_prob,n_inputs, i),'dropped':False} for i in range(n_neurons)]
+    network.append(hidden_layer1)
+    hidden_layer2 = [{'weights' :generate_weighted_weights(networks,1,dropout_prob,n_neurons, i),'dropped':False}  for i in range(n_neurons)]
+    network.append(hidden_layer2)
+    output_layer = [{'weights' :generate_weighted_weights(networks,2,dropout_prob,n_neurons, i),'dropped':False} for i in range(n_outputs)]
+    network.append(output_layer)
+    return network
+
+def generate_weighted_weights(networks, layerIndex, dropout_prob, rowCount, columnCount):
+    weights = np.zeros(rowCount)
+    for network in networks:
+        layer = network[layerIndex]
+        neuron = layer[columnCount]
+        neuron['weights'] = [(1 - dropout_prob) * neuron['weights'][i]  for i in range(rowCount)]
+        weights += neuron['weights']
+    return weights
 
 def predict(network, row):
 	p=outputs = forward_propagate(network, row)
@@ -189,7 +205,7 @@ weightedNetwork = get_weighted_network(networks, dropout_prob)
 predictions = []
 truth = inputData[:,2]
 for row in inputData:
-	prediction = predict(networks[0], row)
+	prediction = predict(weightedNetwork, row)
 	predictions.append(prediction)
 f1 = skl.metrics.f1_score(truth, predictions, average='micro')
 precision = skl.metrics.precision_score(truth, predictions, average='micro')
