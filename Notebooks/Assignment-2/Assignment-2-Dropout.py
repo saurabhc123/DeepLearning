@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from random import seed
 from random import random
+from random import randint
 from math import exp
 import sklearn as skl
 from sklearn.metrics import f1_score
@@ -52,7 +53,10 @@ def forward_propagate(network, inputData):
                 activation = sigmoid(summation)
             else:
                 activation = softmax(summation)
-            neuron['output'] = activation
+            if not neuron['dropped']:
+                neuron['output'] = activation
+            else:
+                neuron['output'] = 0
             layer_output.append(activation)
         outputs.append(layer_output)
         inputRecord = layer_output
@@ -85,21 +89,28 @@ def backward_propagate_error(network, expected):
         if i != len(network) - 1:
             for j in range(len(layer)):
                 error = 0.0
+                #print('For Layer:',j)
                 for neuron in network[i + 1]:
                     if not neuron['dropped']:
                         error += (neuron['weights'][j] * neuron['delta'])
+                    #print('Neuron dropped:', neuron['dropped'],'Error:',error)
                 errors.append(error)
         else:
             for j in range(len(layer)):
                 neuron = layer[j]
-                errors.append(expected[j] - neuron['output'])
+                if not neuron['dropped']:
+                    errors.append(expected[j] - neuron['output'])
+                else:
+                    errors.append(expected[j])
         for j in range(len(layer)):
             neuron = layer[j]
-            if j != len(network) - 1:
-                neuron['delta'] = errors[j] * transfer_derivative(
-                    neuron['output'])  # Sigmoid derivative for all other layers
+            if not neuron['dropped']:
+                if j != len(network) - 1:
+                    neuron['delta'] = errors[j] * transfer_derivative(neuron['output'])  # Sigmoid derivative for all other layers
+                else:
+                    neuron['delta'] = errors[j] * transfer_softmax_derivative(neuron['output'])#softmax derivative for the output layer
             else:
-                neuron['delta'] = errors[j] * transfer_softmax_derivative(neuron['output'])#softmax derivative for the output layer
+                neuron['delta'] = 0.0
 # Update network weights with error
 def update_weights(network, row, l_rate):
     for i in range(len(network)):
@@ -110,35 +121,40 @@ def update_weights(network, row, l_rate):
             for j in range(len(inputs)):
                 if not neuron['dropped']:
                     neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
-            neuron['weights'][-1] += l_rate * neuron['delta']
+            if not neuron['dropped']:
+                neuron['weights'][-1] += l_rate * neuron['delta']
 
 #Train via SGD
-def train_network(network, train, l_rate, n_epoch, n_outputs,n_iterations):
+def train_network(networks, train, l_rate, n_epoch, n_outputs,n_iterations):
 	for epoch in range(n_epoch):
 		sum_error = 0
 		n_examples = len(train)
-		random_samples = train[np.random.choice(train.shape[0], n_iterations, replace=False), :];
-		for row in random_samples:
-			outputs = forward_propagate(network, row)
-			expected = [0 for i in range(n_outputs)]
-			#print("Expected shape",expected)
-			expected[int(row[-1])] = 1
-			#expected[1] = 1
-			sum_error += sum([(expected[i]-outputs[i])**2 for i in range(len(expected))])
-			backward_propagate_error(network, expected)
-			update_weights(network, row, l_rate)
-		print('Epoch=%d, Loss=%.3f' % (epoch, sum_error))
-
-	print("\n\nFinal Weights")
-	for layer in network:
-		layerWeights = []
-		for neuron in layer:
-			layerWeights.append(neuron['weights'])
-		print layerWeights
+        for iteration in range(n_iterations):
+            random_samples = train[np.random.choice(train.shape[0], 1, replace=False), :]
+            networkToPick = randint(0, len(networks) - 1)
+            print('Network Index Picked:',networkToPick)
+            random_network = networks[networkToPick]
+            for row in random_samples:
+                outputs = forward_propagate(random_network, row)
+                expected = [0 for i in range(n_outputs)]
+                #print("Expected shape",expected)
+                expected[int(row[-1])] = 1
+                #expected[1] = 1
+                sum_error += sum([(expected[i]-outputs[i])**2 for i in range(len(expected))])
+                backward_propagate_error(random_network, expected)
+                update_weights(random_network, row, l_rate)
+                print('Epoch=%d, Loss=%.3f' % (epoch, sum_error))
+        for layer in networks[networkToPick]:
+            for neuron in layer:
+                print(neuron['dropped'])
+                print(neuron['weights'])
 
 def softmax(z):
     sum = np.sum(np.exp(z))
     return np.divide(np.exp(z),sum)
+
+def get_weighted_network(networks, dropout_prob):
+    
 
 def predict(network, row):
 	p=outputs = forward_propagate(network, row)
@@ -155,18 +171,25 @@ n_neurons = 3
 dropout_prob = 0.3
 
 #Testing code
-network = initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob)
-for layer in network:
-    for neuron in layer:
-        print(neuron['dropped'])
+networks = []
+network1 = initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob)
+networks.append(network1)
+networks.append(initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob))
+networks.append(initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob))
+networks.append(initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob))
+
 sgd_learning_rate = 0.1
 numberOfEpochs  = 50
 numberOfExamplesPerEpoch = 100
-train_network(network, inputData, sgd_learning_rate, numberOfEpochs, n_outputs,numberOfExamplesPerEpoch)
+
+train_network(networks, inputData, sgd_learning_rate, numberOfEpochs, n_outputs,numberOfExamplesPerEpoch)
+
+weightedNetwork = get_weighted_network(networks, dropout_prob)
+
 predictions = []
 truth = inputData[:,2]
 for row in inputData:
-	prediction = predict(network, row)
+	prediction = predict(networks[0], row)
 	predictions.append(prediction)
 f1 = skl.metrics.f1_score(truth, predictions, average='micro')
 precision = skl.metrics.precision_score(truth, predictions, average='micro')
@@ -184,7 +207,7 @@ dataset = np.loadtxt(inputFilenameWithPath, delimiter=",")
 truth = dataset[:,2]
 predictions = []
 for row in dataset:
-	prediction = predict(network, row)
+	prediction = predict(networks[0], row)
 	predictions.append(prediction)
 	#print('Expected=%d, Got=%d' % (row[-1], prediction))
 f1 = skl.metrics.f1_score(truth, predictions, average='micro')
