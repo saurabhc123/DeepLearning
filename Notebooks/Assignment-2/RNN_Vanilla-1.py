@@ -61,11 +61,11 @@ def transform(row):
 word_vector_size = 50;
 time_steps = 100;
 num_classes = 2
-batch_size = 10;
+batch_size = 1000;
 n_iterations = 10;
 hidden_layer_size = 50
 
-training_data = getData('train.csv')[:500]
+training_data = getData('train.csv')
 training_rows  = map(lambda row: transform(row), training_data)
 training_data = map(lambda row: row[1], training_rows)
 training_labels = map(lambda row: row[0], training_rows)
@@ -113,9 +113,10 @@ sess.run(tf.global_variables_initializer())
 #test_data = mnist.test.images[:batch_size].reshape((-1,time_steps, word_vector_size))
 #test_label = mnist.test.labels[:batch_size]
 
-for i in range(n_iterations):
+for epoch in range(n_iterations):
+    print "Epoch:", epoch
     for j in range(len(training_data)/batch_size):
-        print "j:", j
+        #print "j:", j
         startIndex = j*batch_size
         endIndex = startIndex + batch_size
         batch_x = np.array(training_data[startIndex : endIndex]).reshape((-1,time_steps, word_vector_size))
@@ -124,10 +125,10 @@ for i in range(n_iterations):
         #batch_x = batch_x.reshape((batch_size, time_steps, word_vector_size))
         sess.run(train_step, feed_dict={_inputs: batch_x,
                                         y: batch_y})
-        if i % 1 == 0:
+        if epoch % 1 == 0:
             acc = sess.run(accuracy, feed_dict={_inputs: batch_x, y: batch_y})
             loss = sess.run(cross_entropy, feed_dict={_inputs: batch_x, y: batch_y})
-            print ("Iter " + str(i) + ", Minibatch Loss= " + \
+            print ("Iter " + str(epoch) + ", Minibatch Loss= " + \
                    "{:.6f}".format(loss) + ", Training Accuracy= " + \
                    "{:.5f}".format(acc))
 
