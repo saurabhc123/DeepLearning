@@ -74,7 +74,7 @@ word_vec_dict = getWordVectorDict()
 def transform(row):
     return row['label'], getVectorForSentence(row['sentence'][0], word_vec_dict)
 
-training_data = getData('train.csv')
+training_data = getData('train.csv')[:5000]
 training_rows  = map(lambda row: transform(row), training_data)
 training_data = map(lambda row: row[1], training_rows)
 training_labels = map(lambda row: row[0], training_rows)
@@ -87,7 +87,7 @@ print training_data[0]
 
 X = tf.placeholder(tf.float32, [None, n_steps, n_inputs])
 y = tf.placeholder(tf.int32, [None])
-basic_cell = tf.contrib.rnn.BasicRNNCell(num_units = n_neurons)
+basic_cell = tf.contrib.rnn.BasicRNNCell(num_units = n_neurons, activation = tf.tanh)
 outputs , states = tf.nn.dynamic_rnn(basic_cell, X, dtype= tf.float32)
 logits = tf.layers.dense(states, n_outputs)
 xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels= y , logits= logits)
@@ -108,7 +108,7 @@ batch_size = 1000
 
 with tf.Session() as sess:
     init.run()
-    for i in range(n_epochs):
+    for epoch in range(n_epochs):
         for j in range(len(training_data)/batch_size):
             print "j:", j
             startIndex = j*batch_size
@@ -117,15 +117,10 @@ with tf.Session() as sess:
             batch_y = np.array(training_labels[startIndex : endIndex]).reshape(batch_size)
             #batch_x, batch_y = mnist.train.next_batch(batch_size)
             #batch_x = batch_x.reshape((batch_size, time_steps, word_vector_size))
-            sess.run(training_op, feed_dict={X: batch_x,
-                                            y: batch_y})
-            if i % 1 == 0:
-                acc = sess.run(accuracy, feed_dict={X: batch_x, y: batch_y})
-                loss = sess.run(xentropy, feed_dict={X: batch_x, y: batch_y})
-                print ("Iter " + str(i) + ", Minibatch Loss= " + \
-                        ", Training Accuracy= " + \
-                       "{:.5f}".format(acc))
-
+            sess.run(training_op, feed_dict={X: batch_x, y: batch_y})
+        acc_train = accuracy.eval(feed_dict={X: np.array(training_data), y: np.array(training_labels)})
+        acc_test = accuracy.eval(feed_dict={X: np.array(test_data), y: np.array(test_labels)})
+        print(epoch,"Train accuracy:", acc_train, " Test accuracy:", acc_test)
 
     print ("Testing Accuracy:",
     sess.run(accuracy, feed_dict={X: test_data, y: test_labels}))
