@@ -144,10 +144,8 @@ def train_network(networks, train, l_rate, n_epoch, n_outputs,n_iterations):
                 backward_propagate_error(random_network, expected)
                 update_weights(random_network, row, l_rate)
                 print('Epoch=%d, Loss=%.3f' % (epoch, sum_error))
-        for layer in networks[networkToPick]:
-            for neuron in layer:
-                print(neuron['dropped'])
-                print(neuron['weights'])
+
+
 
 def softmax(z):
     sum = np.sum(np.exp(z))
@@ -168,8 +166,8 @@ def generate_weighted_weights(networks, layerIndex, dropout_prob, rowCount, colu
     for network in networks:
         layer = network[layerIndex]
         neuron = layer[columnCount]
-        neuron['weights'] = [(1 - dropout_prob) * neuron['weights'][i]  for i in range(rowCount)]
-        weights += neuron['weights']
+        val = [(1 - dropout_prob) * neuron['weights'][i]  for i in range(rowCount)]
+        weights += val
     return weights
 
 def predict(network, row):
@@ -196,11 +194,25 @@ networks.append(initialize_network(n_inputs, n_neurons, n_outputs, dropout_prob)
 
 sgd_learning_rate = 0.1
 numberOfEpochs  = 50
-numberOfExamplesPerEpoch = 100
+numberOfExamplesPerEpoch = 600
 
 train_network(networks, inputData, sgd_learning_rate, numberOfEpochs, n_outputs,numberOfExamplesPerEpoch)
 
+for network in networks:
+    for layer in range(len(network)):
+        print('Layer',layer)
+        for neuron in network[layer]:
+            print(neuron['dropped'])
+            print(neuron['weights'])
 weightedNetwork = get_weighted_network(networks, dropout_prob)
+
+
+print('Weighted Network')
+for layer in range(len(weightedNetwork)):
+        print('Layer',layer)
+        for neuron in network[layer]:
+            print(neuron['dropped'])
+            print(neuron['weights'])
 
 predictions = []
 truth = inputData[:,2]
