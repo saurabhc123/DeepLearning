@@ -45,7 +45,7 @@ accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
 
 init = tf.global_variables_initializer()
 
-mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
+mnist = input_data.read_data_sets(DATA_DIR)
 X_test = mnist.test.images.reshape(-1,n_steps,n_inputs)
 y_test = mnist.test.labels
 
@@ -55,7 +55,7 @@ batch_size = 150
 with tf.Session() as sess:
     init.run()
     for epoch in range(n_epochs):
-        for iteration in range(1000):
+        for iteration in range(1):
             X_batch, y_batch = mnist.train.next_batch(batch_size)
             print(np.shape(X_batch))
             X_batch = X_batch.reshape([batch_size,n_steps,n_inputs])

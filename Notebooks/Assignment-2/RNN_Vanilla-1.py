@@ -61,11 +61,11 @@ def transform(row):
 word_vector_size = 50;
 time_steps = 100;
 num_classes = 2
-batch_size = 2;
-n_iterations = 50;
+batch_size = 10;
+n_iterations = 10;
 hidden_layer_size = 50
 
-training_data = getData('train.csv')
+training_data = getData('train.csv')[:500]
 training_rows  = map(lambda row: transform(row), training_data)
 training_data = map(lambda row: row[1], training_rows)
 training_labels = map(lambda row: row[0], training_rows)
