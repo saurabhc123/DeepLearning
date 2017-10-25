@@ -10,7 +10,7 @@ import csv
 
 import numpy as np
 
-DATA_DIR = 'MNIST'
+
 sentiment_data = 'sentiment-data'
 
 
@@ -40,13 +40,13 @@ def getVectorForSentence(sentence, word_vec_dict):
             sentence_matrix = np.vstack((sentence_matrix,word_vec))
     return getPaddedSentenceMatrix(sentence_matrix)
 
-DATA_DIR = 'MNIST'
+
 vocabulary_size = 28
 n_inputs = 50
 n_steps = 100
 n_neurons = 150
 n_outputs = 2
-learning_rate = 0.001
+learning_rate = 0.01
 
 init = tf.global_variables_initializer()
 
@@ -92,16 +92,16 @@ outputs , states = tf.nn.dynamic_rnn(basic_cell, X, dtype= tf.float32)
 logits = tf.layers.dense(states, n_outputs)
 xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels= y , logits= logits)
 loss = tf.reduce_mean(xentropy)
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+#optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+optimizer = tf.train.RMSPropOptimizer(0.1, 0.9, 0.01)
 training_op = optimizer.minimize(loss)
 correct = tf.nn.in_top_k(logits, y, 1)
 accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
 
+
+
 init = tf.global_variables_initializer()
 
-#mnist = input_data.read_data_sets(DATA_DIR)
-#X_test = mnist.test.images.reshape(-1,n_steps,n_inputs)
-#y_test = mnist.test.labels
 
 n_epochs = 10
 batch_size = 1000
@@ -114,9 +114,7 @@ with tf.Session() as sess:
             startIndex = j*batch_size
             endIndex = startIndex + batch_size
             batch_x = np.array(training_data[startIndex : endIndex]).reshape((-1,time_steps, word_vector_size))
-            batch_y = np.array(training_labels[startIndex : endIndex]).reshape(batch_size)
-            #batch_x, batch_y = mnist.train.next_batch(batch_size)
-            #batch_x = batch_x.reshape((batch_size, time_steps, word_vector_size))
+            batch_y = np.array(training_labels[startIndex : endIndex]).reshape(-1,batch_size)
             sess.run(training_op, feed_dict={X: batch_x, y: batch_y})
         acc_train = accuracy.eval(feed_dict={X: np.array(training_data), y: np.array(training_labels)})
         acc_test = accuracy.eval(feed_dict={X: np.array(test_data), y: np.array(test_labels)})
