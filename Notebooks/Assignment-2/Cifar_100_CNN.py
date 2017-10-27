@@ -89,14 +89,15 @@ y_conv = ConvHelper.full_layer(full1_drop, n_classes)
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= y_conv,
                                                                labels=y_))
-train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
+loss = tf.reduce_mean(cross_entropy)
+train_step = tf.train.AdamOptimizer(1e-5).minimize(loss)
 
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
-STEPS = 200
-MINIBATCH_SIZE = 250
+STEPS = 1000
+MINIBATCH_SIZE = 50
 
 print "Starting"
 with tf.Session() as sess:
@@ -108,6 +109,10 @@ with tf.Session() as sess:
         sess.run(train_step, feed_dict={x: batch[0], y_: batch[1],
                                         keep_prob: 0.75})
         if(i%20 == 0):
-            test(sess)
+            acc = np.mean(sess.run(accuracy, feed_dict={x: batch[0], y_: batch[1],
+                                                 keep_prob: 1.0}))
+            loss_ = np.mean(sess.run(loss, feed_dict={x: batch[0], y_: batch[1],keep_prob: 1.0}))
+            print "Training accuracy: {:.4}%".format(acc * 100)
+            print "Loss: {:.4}".format(loss_)
 
     test(sess)

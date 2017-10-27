@@ -95,6 +95,9 @@ correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
+STEPS = 500
+MINIBATCH_SIZE = 100
+
 print "Starting"
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -103,6 +106,12 @@ with tf.Session() as sess:
         print "Starting mini-batch", i
         batch = cifar.train.next_batch(MINIBATCH_SIZE)
         sess.run(train_step, feed_dict={x: batch[0], y_: batch[1],
-                                        keep_prob: 0.5})
+                                        keep_prob: 0.75})
+        if(i%20 == 0):
+            acc = np.mean(sess.run(accuracy, feed_dict={x: batch[0], y_: batch[1],
+                                                 keep_prob: 1.0}))
+            loss_ = np.mean(sess.run(cross_entropy, feed_dict={x: batch[0], y_: batch[1],keep_prob: 1.0}))
+            print "Training accuracy: {:.4}%".format(acc * 100)
+            print "Loss: {:.4}".format(loss_)
 
     test(sess)
