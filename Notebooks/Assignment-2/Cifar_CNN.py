@@ -82,7 +82,7 @@ conv2 = ConvHelper.conv_layer(conv1_pool, shape=[5, 5, 32, 64])
 conv2_pool = ConvHelper.max_pool_2x2(conv2)
 conv2_flat = tf.reshape(conv2_pool, [-1, 8 * 8 * 64])
 
-full_1 = tf.nn.relu(ConvHelper.full_layer(conv2_flat, 1024))
+full_1 = tf.nn.elu(ConvHelper.full_layer(conv2_flat, 1024))
 full1_drop = tf.nn.dropout(full_1, keep_prob=keep_prob)
 
 y_conv = ConvHelper.full_layer(full1_drop, 10)
@@ -95,8 +95,8 @@ correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
-STEPS = 500
-MINIBATCH_SIZE = 100
+STEPS = 200
+MINIBATCH_SIZE = 200
 
 print "Starting"
 with tf.Session() as sess:
