@@ -129,22 +129,19 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
 STEPS = 1000
-MINIBATCH_SIZE = 50
+MINIBATCH_SIZE = 100
 
 print "Starting"
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
-    for i in range(STEPS):
-        print "Starting mini-batch", i
-        batch = cifar.train.next_batch(MINIBATCH_SIZE)
-        sess.run(train_step, feed_dict={x: batch[0], y_: batch[1],
-                                        keep_prob: 0.50})
-        if(i%20 == 0):
-            acc = np.mean(sess.run(accuracy, feed_dict={x: batch[0], y_: batch[1],
-                                                 keep_prob: 1.0}))
-            loss_ = np.mean(sess.run(loss, feed_dict={x: batch[0], y_: batch[1],keep_prob: 1.0}))
-            print "Training accuracy: {:.4}%".format(acc * 100)
-            print "Loss: {:.4}".format(loss_)
+    for epoch in range(STEPS):
+        print "Starting epoch", epoch
+        for batch_count in range(500):
+            batch = cifar.train.next_batch(MINIBATCH_SIZE)
+            sess.run(train_step, feed_dict={x: batch[0], y_: batch[1],
+                                        keep_prob: 1.0})
+        if(epoch%1 == 0):
+            test(sess)
 
     test(sess)

@@ -62,7 +62,7 @@ def forward_propagate(network, inputData):
         inputRecord = layer_output
     return layer_output
 
-def softmax(z):
+def softmax1(z):
     sum = np.sum(np.exp(z), axis=1, keepdims=True)
     return np.divide(np.exp(z),sum)
 
