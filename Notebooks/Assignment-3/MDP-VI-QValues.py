@@ -62,16 +62,16 @@ def get_new_states(input_cell):
         return states
     #go left
     if(input_cell.colIndex > 0):
-        states.append(input[input_cell.rowIndex][input_cell.colIndex - 1])
+        states.append((input[input_cell.rowIndex][input_cell.colIndex - 1],'left'))
     #go right
     if(input_cell.colIndex < cols - 1):
-        states.append(input[input_cell.rowIndex][input_cell.colIndex + 1])
+        states.append((input[input_cell.rowIndex][input_cell.colIndex + 1],'right'))
     #go up
     if(input_cell.rowIndex > 0):
-        states.append(input[input_cell.rowIndex - 1][input_cell.colIndex])
+        states.append((input[input_cell.rowIndex - 1][input_cell.colIndex],'up'))
     #go down
     if(input_cell.rowIndex < rows - 1):
-        states.append(input[input_cell.rowIndex + 1][input_cell.colIndex])
+        states.append((input[input_cell.rowIndex + 1][input_cell.colIndex],'down'))
     return states
 
 def get_new_state(input_cell, action):
@@ -110,7 +110,7 @@ def perform_value_iteration(input):
                     V[h][stateIndex] = V[h-1][stateIndex]
                 else:
                     for new_state in new_possible_states:
-                        neighborIndex = new_state.rowIndex * cols + new_state.colIndex
+                        neighborIndex = new_state[0].rowIndex * cols + new_state[0].colIndex
                         neighborValue = V[h-1][neighborIndex]
                         if V[h-1][stateIndex] + neighborValue > maxValue:
                             maxValue = V[h-1][stateIndex] + neighborValue
