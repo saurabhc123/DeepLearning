@@ -8,9 +8,10 @@ from skimage.transform import resize
 import ConvHelper
 import pickle
 
-DATA_PATH = "cifar-100-python/cifar-10-batches-py"
+DATA_PATH = "cifar-100-python"
 STEPS = 50
 MINIBATCH_SIZE = 100
+n_classes = 100
 
 class CifarLoader(object):
     def __init__(self, source_files):
@@ -25,7 +26,7 @@ class CifarLoader(object):
         n = len(images)
         self.images = images.reshape(n, 3, 32, 32).transpose(0, 2, 3, 1)\
                           .astype(float) / 255
-        self.labels = one_hot(np.hstack([d["labels"] for d in data]), 10)
+        self.labels = one_hot(np.hstack([d["fine_labels"] for d in data]), n_classes)
         return self
 
     def next_batch(self, batch_size):
@@ -35,9 +36,8 @@ class CifarLoader(object):
 
 class CifarDataManager(object):
     def __init__(self):
-        self.train = CifarLoader(["data_batch_{}".format(i)
-        for i in range(1, 6)]).load()
-        self.test = CifarLoader(["test_batch"]).load()
+        self.train = CifarLoader(["train"]).load()
+        self.test = CifarLoader(["test"]).load()
 
 
 def unpickle(file):
@@ -45,7 +45,7 @@ def unpickle(file):
         dict = pickle.load(fo)
     return dict
 
-def one_hot(vec, vals=10):
+def one_hot(vec, vals=n_classes):
     n = len(vec)
     out = np.zeros((n, vals))
     out[range(n), vec] = 1
@@ -60,10 +60,35 @@ def display_cifar(images, size):
     plt.imshow(im)
     plt.show()
 
+def weight_variable(shape):
+    initial = tf.truncated_normal(shape, stddev=0.1)
+    return tf.Variable(initial)
+
+def bias_variable(shape):
+    initial = tf.constant(0.1, shape=shape)
+    return tf.Variable(initial)
+
+def conv2d(x, W):
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+
+def max_pool_2x2(x):
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+def conv_layer(input, shape):
+    W = weight_variable(shape,)
+    b = bias_variable([shape[3]])
+    return tf.nn.relu(conv2d(input, W) + b)
+
+def full_layer(input, size):
+    in_size = int(input.get_shape()[1])
+    W = weight_variable([in_size, size])
+    b = bias_variable([size])
+    return tf.matmul(input, W) + b
+
 def test(sess):
     print "Starting Test"
     X = cifar.test.images.reshape(10, 1000, 32, 32, 3)
-    Y = cifar.test.labels.reshape(10, 1000, 10)
+    Y = cifar.test.labels.reshape(10, 1000, n_classes)
     acc = np.mean([sess.run(accuracy, feed_dict={x: X[i], y_: Y[i],
                                                  keep_prob: 1.0})
                    for i in range(10)])
@@ -72,7 +97,12 @@ def test(sess):
 cifar = CifarDataManager()
 
 x = tf.placeholder(tf.float32, shape=[None, 32, 32, 3])
-y_ = tf.placeholder(tf.float32, shape=[None, 10])
+y_ = tf.placeholder(tf.float32, shape=[None, n_classes])
+keep_prob = tf.placeholder(tf.float32)
+
+
+x = tf.placeholder(tf.float32, shape=[None, 32, 32, 3])
+y_ = tf.placeholder(tf.float32, shape=[None, n_classes])
 keep_prob = tf.placeholder(tf.float32)
 
 conv1 = ConvHelper.conv_layer(x, shape=[5, 5, 3, 32])
@@ -85,17 +115,20 @@ conv2_flat = tf.reshape(conv2_pool, [-1, 8 * 8 * 64])
 full_1 = tf.nn.elu(ConvHelper.full_layer(conv2_flat, 1024))
 full1_drop = tf.nn.dropout(full_1, keep_prob=keep_prob)
 
-y_conv = ConvHelper.full_layer(full1_drop, 10)
+y_conv = ConvHelper.full_layer(full1_drop, n_classes)
+
+
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= y_conv,
                                                                labels=y_))
-train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+loss = tf.reduce_mean(cross_entropy)
+train_step = tf.train.AdamOptimizer(1e-5).minimize(loss)
 
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
-STEPS = 20
+STEPS = 1000
 MINIBATCH_SIZE = 100
 
 print "Starting"
@@ -103,7 +136,6 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     for epoch in range(STEPS):
-
         print "Starting epoch", epoch
         for batch_count in range(500):
             batch = cifar.train.next_batch(MINIBATCH_SIZE)
@@ -111,11 +143,5 @@ with tf.Session() as sess:
                                         keep_prob: 1.0})
         if(epoch%1 == 0):
             test(sess)
-            #acc = np.mean(sess.run(accuracy, feed_dict={x: batch[0], y_: batch[1],
-                                                 #keep_prob: 1.0}))
-            #loss_ = np.mean(sess.run(cross_entropy, feed_dict={x: batch[0], y_: batch[1],keep_prob: 1.0}))
-            #print "Training accuracy: {:.4}%".format(acc * 100)
-            #print "Loss: {:.4}".format(loss_)
-
 
     test(sess)
