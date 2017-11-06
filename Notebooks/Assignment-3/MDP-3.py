@@ -161,6 +161,7 @@ def perform_value_iteration(input):
         new_sum = np.sum(V[h])
         first_policy_processed = True #Up policy processed
         print "Policy - Iteration-{}:{}".format(h,Policy[0:number_of_states -1])
+        print "Policy Quality:{}".format(np.sum(V[h]))
         if(h > 5): #Let the first few iterations go through for convergence check.
             if(new_sum - previous_sum) < 0.01:
                 print "Converged at iteration:{}. Values:".format(h)
