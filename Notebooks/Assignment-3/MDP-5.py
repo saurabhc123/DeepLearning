@@ -51,16 +51,17 @@ input[2][1].value = 0
 
 
 
-horizon = 10
+horizon = 50
 number_of_states = 13
 max_reward = np.float16(10)
 number_of_actions = 5
-gamma = 1.0
+gamma = 0.5
 MAX_REWARD = 10.0
 q_states = np.zeros((number_of_states,number_of_actions),dtype=np.float16)
 terminal = np.zeros((number_of_states), dtype = np.bool)
-R = np.zeros((number_of_states,number_of_states),dtype=np.float16)
+R = np.ones((number_of_states,number_of_states),dtype=np.float16)
 
+R = -1 * R
 R[3][12] = 10.0
 R[7][12] = -10.0
 
@@ -152,7 +153,9 @@ def perform_value_iteration(input):
                 return
         #print V[h][0:number_of_states -1]
 
+
+gamma = 0.5#Check whether this is to be setup
 perform_value_iteration(input)
-#change gamma to 0.5 for part-4
+
 
 
