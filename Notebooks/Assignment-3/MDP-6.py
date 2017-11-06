@@ -55,7 +55,7 @@ horizon = 20
 number_of_states = 13
 max_reward = np.float16(10)
 number_of_actions = 5
-gamma = 1.0
+gamma = 0.9
 MAX_REWARD = 10.0
 q_states = np.zeros((number_of_states,number_of_actions),dtype=np.float16)
 terminal = np.zeros((number_of_states), dtype = np.bool)
