@@ -52,9 +52,10 @@ input[2][1].value = 0
 
 horizon = 20
 number_of_states = 12
-max_reward = 10
-number_of_actions = 4
-q_states = np.zeros((number_of_states,number_of_actions),dtype=np.int16)
+max_reward = np.float16(10)
+number_of_actions = 5
+discount_factor = 1.0
+q_states = np.zeros((number_of_states,number_of_actions),dtype=np.float16)
 
 def get_new_states(input_cell):
     states = []
@@ -87,33 +88,43 @@ def get_new_state(input_cell, action):
     elif action == 3: #go down
         if(input_cell.rowIndex < rows - 1):
             return input[input_cell.rowIndex + 1][input_cell.colIndex]
+    elif action == 4: #exit
+        return None
 
 def perform_value_iteration(input):
-    V = np.zeros((horizon,number_of_states), dtype=np.int16)
+    V = np.zeros((horizon,number_of_states), dtype=np.float16)
     for h in range(0,1):
         for i in range(rows):
             for j in range(cols):
-                V[h][i*cols + j] = input[i][j].value
+                V[h][i*cols + j] = 0.0
             input.append(col_values)
 
     for h in range(1,horizon):
         previousSum = np.sum(V[h-1])
         for i in range(rows):
             for j in range(cols):
-                maxValue = 0
+                maxValue = 0.0
                 #Ignore the null state
                 if((j == 1) & (i == 2)):
                     continue
                 new_possible_states = get_new_states(input[i][j])
                 stateIndex = i*cols + j
-                if (len(new_possible_states) == 0) | (V[h-1][stateIndex] == np.int16(max_reward)):
+                if (len(new_possible_states) == 0) | (V[h-1][stateIndex] == np.float16(max_reward)):
                     V[h][stateIndex] = V[h-1][stateIndex]
                 else:
                     for new_state in new_possible_states:
-                        neighborIndex = new_state[0].rowIndex * cols + new_state[0].colIndex
-                        neighborValue = V[h-1][neighborIndex]
-                        if V[h-1][stateIndex] + neighborValue > maxValue:
-                            maxValue = V[h-1][stateIndex] + neighborValue
+                        newStateIndex = 0
+                        newStateReward = 0.0
+                        if(new_state == None):#Exit happening. Terminal state
+                            if input[i][j].is_terminal:
+                                newStateReward = input[i][j].value
+                                newStateIndex = stateIndex
+                        else:
+                            newStateIndex = new_state[0].rowIndex * cols + new_state[0].colIndex
+                            newStateReward = input[new_state[0].rowIndex][new_state[0].colIndex].value
+                        if V[h-1][newStateIndex] * discount_factor + newStateReward > maxValue:
+                            maxValue = V[h-1][newStateIndex] * discount_factor + newStateReward
+                            print maxValue
                     V[h][stateIndex] = maxValue
         if(np.sum(V[h]) - previousSum) < 0.01:
             print "Converged at iteration:{}".format(h)
