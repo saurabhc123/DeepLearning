@@ -25,15 +25,17 @@ def run_Q_Learning(samples):
             initial_state,action,new_state,reward = get_values_from_sample(s)
             alpha = get_alpha(initial_state,action)
             old_Q_s_a = Q[initial_state][action]
-            sample = reward + gamma * getMaxForState(new_state)
+            maxForNewState = getMaxForState(new_state)
+            sample = reward + gamma * maxForNewState
             Q[initial_state][action] = (1 - alpha) * old_Q_s_a + alpha * sample
             counts[initial_state][action] += 1
             change = Q[initial_state][action] - old_Q_s_a
             total_change += change
+            print("State:",new_state,"Max Value:",maxForNewState)
             print Q
             print counts
         print total_change
-        if(total_change < 0.00001):
+        if(total_change < 0.01):
             print "Converged at horizon:", h
             print Q
             return

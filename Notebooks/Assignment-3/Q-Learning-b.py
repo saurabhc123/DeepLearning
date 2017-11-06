@@ -8,10 +8,6 @@ Q = np.zeros((number_of_states, number_of_actions),dtype=np.float16)
 counts = np.zeros((number_of_states, number_of_actions),dtype=np.int16)
 gamma = 0.9
 
-def get_alpha1(state,action):
-    w= counts[state][action]
-    return 1/(w+1)
-
 def get_alpha():
     return 0.1
 
@@ -48,6 +44,7 @@ def load_data():
         for row in reader:
             samples.append(row)
     return samples
+
 horizons = 200
 samples = load_data()
 run_Q_Learning(samples)

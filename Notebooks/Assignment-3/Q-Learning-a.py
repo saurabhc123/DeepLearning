@@ -8,11 +8,6 @@ Q = np.zeros((number_of_states, number_of_actions),dtype=np.float16)
 counts = np.zeros((number_of_states, number_of_actions),dtype=np.int16)
 gamma = 0.9
 
-def get_alpha1(state,action):
-    return 0.1
-    w= counts[state][action]
-    return 1/(w+1)
-
 def get_alpha():
     return 0.1
 
@@ -27,9 +22,11 @@ def run_Q_Learning(samples):
         initial_state,action,new_state,reward = get_values_from_sample(s)
         alpha = get_alpha()
         old_Q_s_a = Q[initial_state][action]
-        sample = reward + gamma * getMaxForState(new_state)
+        maxForNewState = getMaxForState(new_state)
+        sample = reward + gamma * maxForNewState
         Q[initial_state][action] = (1 - alpha) * old_Q_s_a + alpha * sample
-        #print Q
+        print("State:",new_state,"Max Value:",maxForNewState)
+        print Q
     print Q
 
 def load_data():
