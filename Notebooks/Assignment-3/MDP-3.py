@@ -118,7 +118,7 @@ def perform_value_iteration(input):
             for j in range(cols):
                 V[h][i*cols + j] = 0.0
             input.append(col_values)
-
+    first_policy_processed = False
     for h in range(1,horizon):
         previous_sum = np.sum(V[h - 1])
         for i in range(0,number_of_states-1):
@@ -134,32 +134,43 @@ def perform_value_iteration(input):
             for state_context in get_new_states(input[m][n]):
                 new_state = state_context[0]
                 action = state_context[1]
-                new_state_index = get_state_index(new_state)
-                state_transition_probability = get_state_transition_probability(state, new_state_index)
-                state_transition_reward = get_state_transition_reward(state, new_state_index)
-                discounted_future_reward = gamma * V[h-1][new_state_index]
-                value = state_transition_probability *(state_transition_reward +
-                                                       discounted_future_reward)
-                values_so_far.append(value)
-                actions_so_far.append(str(action))
-                if(action == 'exit'):
-                    terminal[state] = True
-            V[h][state] = max(values_so_far)
-            max_action_index = values_so_far.index(max(values_so_far))
-            Policy[state] = actions_so_far[max_action_index]
+                if ((not first_policy_processed) & (action != 'up')):
+                    continue
+                else:
+                    #Only allow Up for the first round
+                    new_state_index = get_state_index(new_state)
+                    state_transition_probability = get_state_transition_probability(state, new_state_index)
+                    state_transition_reward = get_state_transition_reward(state, new_state_index)
+                    discounted_future_reward = gamma * V[h-1][new_state_index]
+                    value = state_transition_probability *(state_transition_reward +
+                                                           discounted_future_reward)
+                    values_so_far.append(value)
+                    actions_so_far.append(str(action))
+                    if(action == 'exit'):
+                        terminal[state] = True
+            if(len(values_so_far) == 0):
+                V[h][state] = 0
+                max_action_index = 0
+                Policy[state] = 'None'
+            else:
+                V[h][state] = max(values_so_far)
+                max_action_index = values_so_far.index(max(values_so_far))
+                Policy[state] = actions_so_far[max_action_index]
             if(V[h][state] >= MAX_REWARD):
                 terminal[state] = True
         new_sum = np.sum(V[h])
-        if(h > 1): #Let the first iteration go through for convergence check.
+        first_policy_processed = True #Up policy processed
+        print "Policy - Iteration-{}:{}".format(h,Policy[0:number_of_states -1])
+        if(h > 5): #Let the first few iterations go through for convergence check.
             if(new_sum - previous_sum) < 0.01:
-                print "Converged at iteration:{}".format(h)
+                print "Converged at iteration:{}. Values:".format(h)
                 print V[h][0:number_of_states -1]
-                print Policy[0:number_of_states -1]
+                print "Optimal policy:{}".format(Policy[0:number_of_states -1])
                 return
         #print V[h][0:number_of_states -1]
 
 
-
+first_policy_processed = False
 perform_value_iteration(input)
 
 
