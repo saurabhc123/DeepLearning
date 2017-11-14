@@ -55,7 +55,7 @@ horizon = 10
 number_of_states = 13
 max_reward = np.float16(10)
 number_of_actions = 5
-gamma = 1.0
+gamma = 0.9
 MAX_REWARD = 10.0
 q_states = np.zeros((number_of_states,number_of_actions),dtype=np.float16)
 terminal = np.zeros((number_of_states), dtype = np.bool)
@@ -160,13 +160,13 @@ def perform_value_iteration(input):
                 terminal[state] = True
         new_sum = np.sum(V[h])
         first_policy_processed = True #Up policy processed
-        print "Policy - Iteration-{}:{}".format(h,Policy[0:number_of_states -1])
+        print "\nPolicy - Iteration-{}:\n{}".format(h,np.array(Policy[0:number_of_states -1]).reshape((3,4)))
         print "Policy Quality:{}".format(np.sum(V[h]))
         if(h > 5): #Let the first few iterations go through for convergence check.
             if(new_sum - previous_sum) < 0.01:
-                print "Converged at iteration:{}. Values:".format(h)
-                print V[h][0:number_of_states -1]
-                print "Optimal policy:{}".format(Policy[0:number_of_states -1])
+                print "\nConverged at iteration:{}. Values:".format(h)
+                print np.array(V[h][0:number_of_states -1]).reshape((3,4))
+                print "\n\nOptimal policy:\n{}".format(np.array(Policy[0:number_of_states -1]).reshape((3,4)))
                 return
         #print V[h][0:number_of_states -1]
 
