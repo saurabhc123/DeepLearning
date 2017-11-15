@@ -55,7 +55,7 @@ horizon = 50
 number_of_states = 13
 max_reward = np.float16(10)
 number_of_actions = 5
-gamma = 0.5
+gamma = 0.9
 MAX_REWARD = 10.0
 q_states = np.zeros((number_of_states,number_of_actions),dtype=np.float16)
 terminal = np.zeros((number_of_states), dtype = np.bool)
@@ -149,12 +149,12 @@ def perform_value_iteration(input):
         if(h > 1): #Let the first iteration go through for convergence check.
             if(new_sum - previous_sum) < 0.01:
                 print "Converged at iteration:{}".format(h)
-                print V[h][0:number_of_states -1]
+                print np.array(V[h][0:number_of_states -1]).reshape((3,4))
                 return
         #print V[h][0:number_of_states -1]
 
 
-gamma = 0.5#Check whether this is to be setup
+gamma = 0.9
 perform_value_iteration(input)
 
 

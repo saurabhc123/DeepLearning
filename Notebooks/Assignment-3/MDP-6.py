@@ -185,8 +185,9 @@ def perform_value_iteration(input):
         if(h > 5): #Let the first few iterations go through for convergence check.
             if(new_sum - previous_sum) < 0.01:
                 print "Converged at iteration:{}. Values:".format(h)
-                print V[h][0:number_of_states -1]
-                print "Optimal policy:{}".format(Policy[0:number_of_states -1])
+                print np.array(V[h][0:number_of_states -1]).reshape((3,4))
+                #print "Optimal policy:{}".format(Policy[0:number_of_states -1])
+                print "\n\nOptimal policy:\n{}".format(np.array(Policy[0:number_of_states -1]).reshape((3,4)))
                 return
         #print V[h][0:number_of_states -1]
 
