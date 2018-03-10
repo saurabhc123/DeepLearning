@@ -39,10 +39,10 @@ with tf.Session() as sess:
         batch = mnist.train.next_batch(50)
         if i % 100 == 0:
             train_accuracy = sess.run(accuracy, feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
-            print "step {}, training accuracy {}".format(i, train_accuracy)
+            print ("step {}, training accuracy {}".format(i, train_accuracy))
             sess.run(train_step, feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
             X = mnist.test.images.reshape(10, 1000, 784)
             Y = mnist.test.labels.reshape(10, 1000, 10)
             test_accuracy = np.mean([sess.run(accuracy,feed_dict = {x: X[i], y_: Y[i],keep_prob: 1.0})
                                       for i in range(10)])
-    print "test accuracy: {}".format(test_accuracy)
+    print ("test accuracy: {}".format(test_accuracy))

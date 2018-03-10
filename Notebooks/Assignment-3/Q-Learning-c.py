@@ -10,7 +10,9 @@ gamma = 0.9
 
 def get_alpha(state,action):
     w= counts[state][action]
-    return 1/(w+1)
+    ratio = 1/float((w+1))
+    print ratio
+    return ratio
 
 def get_values_from_sample(s):
     return int(s[0]) - 1, int(s[1]) - 1,int(s[2]) - 1,int(s[3])
@@ -35,7 +37,7 @@ def run_Q_Learning(samples):
             print Q
             print counts
         print total_change
-        if(total_change < 0.01):
+        if(total_change < 0.001):
             print "Converged at horizon:", h
             print Q
             return

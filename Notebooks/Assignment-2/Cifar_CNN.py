@@ -61,13 +61,13 @@ def display_cifar(images, size):
     plt.show()
 
 def test(sess):
-    print "Starting Test"
+    print ("Starting Test")
     X = cifar.test.images.reshape(10, 1000, 32, 32, 3)
     Y = cifar.test.labels.reshape(10, 1000, 10)
     acc = np.mean([sess.run(accuracy, feed_dict={x: X[i], y_: Y[i],
                                                  keep_prob: 1.0})
                    for i in range(10)])
-    print "Accuracy: {:.4}%".format(acc * 100)
+    print ("Accuracy: {:.4}%".format(acc * 100))
 
 cifar = CifarDataManager()
 
@@ -98,13 +98,13 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 STEPS = 20
 MINIBATCH_SIZE = 100
 
-print "Starting"
+print ("Starting")
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     for epoch in range(STEPS):
 
-        print "Starting epoch", epoch
+        print ("Starting epoch", epoch)
         for batch_count in range(500):
             batch = cifar.train.next_batch(MINIBATCH_SIZE)
             sess.run(train_step, feed_dict={x: batch[0], y_: batch[1],

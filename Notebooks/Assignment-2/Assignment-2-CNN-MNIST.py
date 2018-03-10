@@ -47,14 +47,14 @@ def runClassification(y_labels , y_conv, data):
             batch = mnist.train.next_batch(50)
             if i % 100 == 0:
                 train_accuracy = sess.run(accuracy,feed_dict={x: batch[0], y: batch[1]})
-            print "step {}, training accuracy {}".format(i, train_accuracy)
+            print ("step {}, training accuracy {}".format(i, train_accuracy))
             sess.run(train_step, feed_dict={x: batch[0], y: batch[1]})
             X_ = mnist.test.images.reshape(10, 1000, 784)
             Y_ = mnist.test.labels.reshape(10, 1000, 10)
             test_accuracy = np.mean([sess.run(accuracy,
                                  feed_dict={x:X_[i], y:Y_[i]})
                                  for i in range(10)])
-        print "test accuracy: {}".format(test_accuracy)
+        print ("test accuracy: {}".format(test_accuracy))
 
 data = GetInputData()
 x = tf.placeholder(tf.float32, shape=[None, imgDim * imgDim])
